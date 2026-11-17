@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Classical Ciphers — Substitution &amp; Transposition</title>
+<meta name="description" content="An interactive simulator for Caesar, Playfair, Vigenère and one-time pad substitution, and rail fence transposition.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="#substitution">
+      <svg class="brand-glyph" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.25" fill="none" stroke="currentColor" stroke-width="1.1"/>
+        <circle cx="12" cy="12" r="5.4" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".55"/>
+        <path d="M12 2.6v3.1M12 18.3v3.1M2.6 12h3.1M18.3 12h3.1" stroke="currentColor" stroke-width="1.1" opacity=".8"/>
+        <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+      </svg>
+      <span class="brand-name">Classical Ciphers</span>
+    </a>
+    <p class="bar-meta">Cryptography &amp; Information Security <span class="bar-sep"></span> 2310324 · Unit 1 · Practical 01</p>
+  </div>
+</header>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Modules">
+    <ol class="rail-list">
+      <li><a class="nav" href="#substitution" data-panel="substitution">
+        <span class="nav-n">01</span>
+        <span class="nav-t">Substitution<em>Caesar · Playfair · Vigenère · OTP</em></span>
+      </a></li>
+      <li><a class="nav" href="#transposition" data-panel="transposition">
+        <span class="nav-n">02</span>
+        <span class="nav-t">Transposition<em>Rail fence</em></span>
+      </a></li>
+    </ol>
+  </nav>
+
+  <main class="content" id="content">
+
+    <!-- ───────────────────────── 01 · SUBSTITUTION ───────────────────────── -->
+    <section class="panel" id="substitution" aria-labelledby="h-sub">
+      <header class="phead">
+        <p class="kicker">Module 01</p>
+        <h1 id="h-sub">Substitution <em>cipher</em></h1>
+      </header>
+
+      <div class="modes" role="tablist" aria-label="Substitution cipher">
+        <button class="mode is-on" role="tab" aria-selected="true" data-mode="caesar"><b>Caesar</b><em>single shift</em></button>
+        <button class="mode" role="tab" aria-selected="false" data-mode="playfair"><b>Playfair</b><em>digraph</em></button>
+        <button class="mode" role="tab" aria-selected="false" data-mode="vigenere"><b>Vigenère</b><em>polyalphabetic</em></button>
+        <button class="mode" role="tab" aria-selected="false" data-mode="vernam"><b>One-time pad</b><em>Vernam</em></button>
+      </div>
+
+      <section class="card">
+        <div class="row-head">
+          <label class="label" for="subText">Plaintext</label>
+          <div class="btn-row">
+            <button class="btn btn-quiet" id="subSample" type="button">Sample</button>
+            <button class="btn btn-quiet" id="subClear" type="button">Clear</button>
+          </div>
+        </div>
+        <textarea id="subText" rows="2" maxlength="240" spellcheck="false" aria-describedby="subCount">ATTACK AT DAWN</textarea>
+        <p class="hint" id="subCount"></p>
+      </section>
+
+      <div class="grid-2" id="subGrid">
+
+        <section class="card card-ring" id="ringCard">
+          <div class="ring" id="ring">
+            <svg class="ring-svg" id="ringSvg" viewBox="-176 -176 352 352" aria-hidden="true"></svg>
+            <div class="ring-core" id="ringCore">
+              <span class="ring-k" id="ringK">3</span>
+              <span class="ring-cap">shift&nbsp;·&nbsp;k</span>
+            </div>
+          </div>
+          <p class="hint center">Hover a letter to trace its mapping.</p>
+        </section>
+
+        <section class="card card-ring" id="pfCard" hidden>
+          <div class="pf-wrap">
+            <div class="pf-grid" id="pfGrid" aria-label="Playfair key square"></div>
+          </div>
+          <p class="hint center" id="pfHint">Hover a digraph to see it in the square.</p>
+        </section>
+
+        <section class="card card-key" id="keyCard">
+          <div class="key-pane" data-pane="caesar">
+            <div class="row-head">
+              <label class="label" for="subKey">Shift</label>
+              <output class="key-out" id="subKeyOut">3</output>
+            </div>
+            <input class="range" type="range" id="subKey" min="0" max="25" step="1" value="3">
+            <div class="range-scale"><span>0</span><span>13</span><span>25</span></div>
+          </div>
+
+          <div class="key-pane" data-pane="playfair" hidden>
+            <label class="label" for="pfKey">Keyword</label>
+            <input class="field" type="text" id="pfKey" value="MONARCHY" maxlength="20" spellcheck="false" autocomplete="off">
+            <p class="hint">Fills the 5×5 square; unused letters follow in order. I and J share one cell.</p>
+          </div>
+
+          <div class="key-pane" data-pane="vigenere" hidden>
+            <label class="label" for="vKey">Keyword</label>
+            <input class="field" type="text" id="vKey" value="LEMON" maxlength="16" spellcheck="false" autocomplete="off">
+            <p class="hint">One shift per letter, cycling through the keyword.</p>
+          </div>
+
+          <div class="key-pane" data-pane="vernam" hidden>
+            <div class="row-head">
+              <span class="label">Pad</span>
+              <span class="tag" id="padTag">—</span>
+            </div>
+            <button class="btn btn-quiet" id="padNew" type="button">Generate new pad</button>
+            <p class="hint">One random letter per letter of the message, used exactly once.</p>
+          </div>
+
+          <div class="formula" role="group" aria-label="Cipher definition">
+            <div class="f-line is-dim"><span id="f1">C = (P + k) mod 26</span></div>
+            <div class="f-line is-live"><span id="f2">C = (P + 3) mod 26</span></div>
+            <div class="f-line"><span id="f3">P = (C − 3) mod 26</span></div>
+          </div>
+        </section>
+      </div>
+
+      <section class="card card-out">
+        <div class="row-head">
+          <h2 class="h2">Ciphertext</h2>
+          <button class="btn btn-quiet" id="copyCipher" type="button">Copy</button>
+        </div>
+        <p class="cipher-text" id="cipherOut" aria-live="polite"></p>
+      </section>
+
+      <section class="card">
+        <div class="row-head">
+          <h2 class="h2">Character trace</h2>
+          <span class="tag" id="traceTag">—</span>
+        </div>
+        <div class="trace" id="trace"></div>
+      </section>
+
+      <section class="card card-x">
+        <div class="row-head">
+          <h2 class="h2">How it works</h2>
+          <span class="tag" id="xTag">Caesar</span>
+        </div>
+        <div class="demo" id="demo"></div>
+        <p class="demo-cap" id="demoCap"></p>
+        <div class="demo-dots" id="demoDots"><span></span><span></span><span></span></div>
+      </section>
+    </section>
+
+    <!-- ───────────────────────── 02 · TRANSPOSITION ──────────────────────── -->
+    <section class="panel" id="transposition" aria-labelledby="h-rail" hidden>
+      <header class="phead">
+        <p class="kicker">Module 02</p>
+        <h1 id="h-rail">Transposition <em>cipher</em></h1>
+      </header>
+
+      <section class="card">
+        <div class="row-head">
+          <label class="label" for="railText" id="railTextLabel">Plaintext</label>
+          <div class="btn-row">
+            <button class="btn btn-quiet" id="railSample" type="button">Sample</button>
+          </div>
+        </div>
+        <textarea id="railText" rows="2" maxlength="120" spellcheck="false">ATTACKATDAWN</textarea>
+
+        <div class="controls">
+          <div class="seg" role="group" aria-label="Number of rails">
+            <span class="seg-label">Rails</span>
+            <button type="button" data-rails="2">2</button>
+            <button type="button" data-rails="3" class="is-on">3</button>
+            <button type="button" data-rails="4">4</button>
+            <button type="button" data-rails="5">5</button>
+            <button type="button" data-rails="6">6</button>
+          </div>
+
+          <div class="seg" role="group" aria-label="Direction">
+            <button type="button" data-mode="encrypt" class="is-on">Encrypt</button>
+            <button type="button" data-mode="decrypt">Decrypt</button>
+          </div>
+
+          <button class="btn btn-solid" id="railPlay" type="button">
+            <svg viewBox="0 0 12 12" aria-hidden="true" class="btn-ico"><path d="M3 1.6 10 6l-7 4.4z" fill="currentColor"/></svg>
+            Replay
+          </button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="row-head">
+          <h2 class="h2">Zigzag grid</h2>
+          <span class="tag" id="railStat">—</span>
+        </div>
+        <div class="rail-scroll" id="railScroll">
+          <div class="rail-stage" id="railStage"></div>
+        </div>
+        <div class="rail-rows" id="railRows"></div>
+      </section>
+
+      <section class="card card-out">
+        <div class="row-head">
+          <h2 class="h2" id="railOutLabel">Ciphertext</h2>
+          <button class="btn btn-quiet" id="copyRail" type="button">Copy</button>
+        </div>
+        <p class="cipher-text" id="railOut" aria-live="polite"></p>
+      </section>
+
+      <section class="card card-x">
+        <div class="row-head">
+          <h2 class="h2">How it works</h2>
+          <span class="tag">Rail fence</span>
+        </div>
+        <div class="demo" id="demoRail"></div>
+        <p class="demo-cap" id="demoRailCap"></p>
+        <div class="demo-dots" id="demoRailDots"><span></span><span></span><span></span></div>
+      </section>
+    </section>
+
+  </main>
+</div>
+
+<script src="vendor/gsap.min.js"></script>
+<script src="js/ciphers.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
